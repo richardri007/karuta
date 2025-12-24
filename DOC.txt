@@ -1,0 +1,10 @@
+V1	札を表示する
+	http://localhost:8080/karutaShow
+	
+V2	札が非表示、クリックして表示する
+	http://localhost:8080/karuta
+
+V３　札が移動できる
+	http://localhost:8080/karutaShow2
+	サービスの場合、move.jsは「src/main/resources/static/」置いてる
+		

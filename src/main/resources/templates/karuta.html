@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Spring Boot</title>
+</head>
+<style>
+	img {
+	    width: 	90px;
+	    height:	130px;
+		margin-bottom: 3px;
+	}
+	.container {
+	    display: flex;   /* 水平排列 */
+	    gap: 100;          /* 水平间隙为0 */
+	}
+	.container_r {
+	    display: flex;   /* 水平排列 */
+	    gap: 100;          /* 水平间隙为0 */
+		justify-content: flex-end; /* 右对齐 */
+	}
+</style>
+
+<body>
+	<div style="text-align:center; width: 100%; background-color: green;" >
+		<div style="width: 1200px;">
+			<div style="display: flex;">
+				<div style="width: 600px; text-align:left;" class="container">
+					<div th:each="list1_1 : ${list1_1}">
+						<img src="/images/back.png" style="transform: rotate(180deg);" th:data-alt="@{/images/{name}.png(name=${list1_1})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+				<div style="width: 600px; text-align:right;" class="container_r">
+					<div th:each="list1_2 : ${list1_2}">
+						<img src="/images/back.png" style="transform: rotate(180deg);" th:data-alt="@{/images/{name}.png(name=${list1_2})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+			</div>
+
+			<div style="display: flex;">
+				<div style="width: 600px; text-align:left;" class="container">
+					<div th:each="list2_1 : ${list2_1}">
+						<img src="/images/back.png" style="transform: rotate(180deg);" th:data-alt="@{/images/{name}.png(name=${list2_1})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+				<div style="width: 600px; text-align:right;" class="container_r">
+					<div th:each="list2_2 : ${list2_2}">
+						<img src="/images/back.png" style="transform: rotate(180deg);" th:data-alt="@{/images/{name}.png(name=${list2_2})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+			</div>
+			<div style="display: flex;">
+				<div style="width: 600px; text-align:left;" class="container">
+					<div th:each="list3_1 : ${list3_1}">
+						<img src="/images/back.png" style="transform: rotate(180deg);" th:data-alt="@{/images/{name}.png(name=${list3_1})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+				<div style="width: 600px; text-align:right;" class="container_r">
+					<div th:each="list3_2 : ${list3_2}">
+						<img src="/images/back.png" style="transform: rotate(180deg);" th:data-alt="@{/images/{name}.png(name=${list3_2})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div style="display: flex;">
+				<div style="width: 600px; text-align:left;" class="container">
+					<div th:each="list4_1 : ${list4_1}">
+						<img src="/images/back.png" th:data-alt="@{/images/{name}.png(name=${list4_1})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+				<div style="width: 600px; text-align:right;" class="container_r">
+					<div th:each="list4_2 : ${list4_2}">
+						<img src="/images/back.png" th:data-alt="@{/images/{name}.png(name=${list4_2})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+			</div>
+			<div style="display: flex;">
+				<div style="width: 600px; text-align:left;" class="container">
+					<div th:each="list5_1 : ${list5_1}">
+						<img src="/images/back.png" th:data-alt="@{/images/{name}.png(name=${list5_1})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+				<div style="width: 600px; text-align:right;" class="container_r">
+					<div th:each="list5_2 : ${list5_2}">
+						<img src="/images/back.png" th:data-alt="@{/images/{name}.png(name=${list5_2})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+			</div>
+			<div style="display: flex;">
+				<div style="width: 600px; text-align:left;" class="container">
+					<div th:each="list6_1 : ${list6_1}">
+						<img src="/images/back.png" th:data-alt="@{/images/{name}.png(name=${list6_1})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+				<div style="width: 600px; text-align:right;" class="container_r">
+					<div th:each="list6_2 : ${list6_2}">
+						<img src="/images/back.png" th:data-alt="@{/images/{name}.png(name=${list6_2})}" onclick="this.src =this.dataset.alt">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

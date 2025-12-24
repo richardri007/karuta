@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>高质量图片拖动</title>
+<style>
+  body {
+    margin: 0;
+    background: #eee;
+  }
+
+  .stage {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background: #f9f9f9;
+  }
+
+  .item {
+    position: absolute;
+    width: 160px;
+    cursor: grab;
+    user-select: none;
+    touch-action: none; /* 关键 */
+  }
+
+  .item:active {
+    cursor: grabbing;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <img src="https://picsum.photos/300/200" class="item" style="left:100px;top:100px;">
+  <img src="https://picsum.photos/301/200" class="item" style="left:300px;top:200px;">
+</div>
+
+<script>
+const stage = document.querySelector('.stage');
+let active = null;
+let offsetX = 0;
+let offsetY = 0;
+
+stage.addEventListener('pointerdown', e => {
+  const target = e.target;
+  if (!target.classList.contains('item')) return;
+
+  active = target;
+  active.setPointerCapture(e.pointerId);
+
+  offsetX = e.clientX - active.offsetLeft;
+  offsetY = e.clientY - active.offsetTop;
+
+  active.style.zIndex = Date.now(); // 自动置顶
+});
+
+stage.addEventListener('pointermove', e => {
+  if (!active) return;
+
+  const x = e.clientX - offsetX;
+  const y = e.clientY - offsetY;
+
+  requestAnimationFrame(() => {
+    active.style.left = x + 'px';
+    active.style.top  = y + 'px';
+  });
+});
+
+stage.addEventListener('pointerup', () => {
+  active = null;
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>照片墙</title>
+<style>
+* {margin:0; padding:0;list-style: none}
+
+#ul1 {width:660px; position:relative; margin:10px auto;}
+#ul1 li {width:90px; height:130px; float:left; list-style:none; margin:10px;}
+#ul1 li:hover{ border-color: #9a9fa4; box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.85);}
+#ul1 .active{ border:1px dashed red;}
+</style>
+<script type="text/javascript" src="move.js"></script>
+<script>
+window.onload = function() {
+		var oUl= document.getElementById("ul1");
+		var aLi = oUl.getElementsByTagName("li");
+		var disX = 0;
+		var disY = 0;
+		var minZindex = 1;
+		var aPos =[];
+		
+		//st
+		var COL = 6;
+		var ITEM_W = 90;
+		var ITEM_H = 130;
+		var GAP = 1;
+		var V_GAP = 0;  // 上下间距 10px
+		var STEP_X = ITEM_W + GAP * 2;
+		var STEP_Y = ITEM_H + V_GAP * 2;
+		var UL_WIDTH = oUl.offsetWidth;
+		for (var i = 0; i < aLi.length; ) {
+		    var row = Math.floor(i / 12);
+		    // 本行剩余数量
+		    var remain = aLi.length - i;
+		    var count = Math.min(12, remain);
+		    // 左右各放多少
+		    var leftCount = Math.min(6, count);
+		    var rightCount = count > 6 ? count - 6 : 0;
+		    // 左起点
+		    for (var j = 0; j < leftCount; j++) {
+		        var index = i + j;
+		        var left = j * STEP_X;
+		        var top = row * STEP_Y;
+		        aLi[index].style.left = left + "px";
+		        aLi[index].style.top = top + "px";
+		        aPos[index] = { left: left, top: top };
+		        aLi[index].index = index;
+		    }
+		    // 右起点（关键）
+		    for (var j = 0; j < rightCount; j++) {
+		        var index = i + leftCount + j;
+		        var left = UL_WIDTH - rightCount * STEP_X + j * STEP_X;
+		        var top = row * STEP_Y;
+		        aLi[index].style.left = left + "px";
+		        aLi[index].style.top = top + "px";
+		        aPos[index] = { left: left, top: top };
+		        aLi[index].index = index;
+		    }
+		    i += count;
+		}
+		//ed
+		//st
+		var hr = document.createElement('div');
+		hr.style.position = 'absolute';
+		hr.style.left = '0px';
+		hr.style.width = UL_WIDTH + 'px'; // 容器宽度
+		hr.style.height = '2px';           // 横线高度
+		hr.style.backgroundColor = '#000'; // 横线颜色
+		hr.style.top = 3 * STEP_Y - (V_GAP/2) + 'px'; // 三行底部
+		oUl.appendChild(hr);
+		//ed
+		for(var i=0;i<aLi.length;i++){
+			aLi[i].style.position = "absolute";
+			aLi[i].style.margin = 0;
+			setDrag(aLi[i]);
+		}
+		//拖拽
+		function setDrag(obj){
+			obj.onmouseover = function(){
+				obj.style.cursor = "move";
+			}
+			obj.onmousedown = function(event){
+				var scrollTop = document.documentElement.scrollTop||document.body.scrollTop;
+				var scrollLeft = document.documentElement.scrollLeft||document.body.scrollLeft;
+				obj.style.zIndex = minZindex++;
+				//当鼠标按下时计算鼠标与拖拽对象的距离
+				disX = event.clientX +scrollLeft-obj.offsetLeft;
+				disY = event.clientY +scrollTop-obj.offsetTop;
+				document.onmousemove=function(event){
+					//当鼠标拖动时计算div的位置
+					var l = event.clientX -disX +scrollLeft;
+					var t = event.clientY -disY + scrollTop;
+					obj.style.left = l + "px";
+					obj.style.top = t + "px";
+					for(var i=0;i<aLi.length;i++){
+						aLi[i].className = "";
+					}
+					var oNear = findMin(obj);
+					if(oNear){
+						oNear.className = "active";
+					}
+				}
+				document.onmouseup = function(){
+					document.onmousemove = null;//当鼠标弹起时移出移动事件
+					document.onmouseup = null;//移出up事件，清空内存
+					//检测是否普碰上，在交换位置
+					var oNear = findMin(obj);
+					if(oNear){
+						oNear.className = "";
+						oNear.style.zIndex = minZindex++;
+						obj.style.zIndex = minZindex++;
+						startMove(oNear,aPos[obj.index]);
+						startMove(obj,aPos[oNear.index]);
+						//交换index
+						oNear.index += obj.index;
+						obj.index = oNear.index - obj.index;
+						oNear.index = oNear.index - obj.index;
+					}else{
+						startMove(obj,aPos[obj.index]);
+					}
+				}
+				clearInterval(obj.timer);
+				return false;//低版本出现禁止符号
+			}
+		}
+		//碰撞检测
+		function colTest(obj1,obj2){
+			var t1 = obj1.offsetTop;
+			var r1 = obj1.offsetWidth+obj1.offsetLeft;
+			var b1 = obj1.offsetHeight+obj1.offsetTop;
+			var l1 = obj1.offsetLeft;
+
+			var t2 = obj2.offsetTop;
+			var r2 = obj2.offsetWidth+obj2.offsetLeft;
+			var b2 = obj2.offsetHeight+obj2.offsetTop;
+			var l2 = obj2.offsetLeft;
+
+			if(t1>b2||r1<l2||b1<t2||l1>r2){
+				return false;
+			}else{
+				return true;
+			}
+		}
+		
+		function getDis(obj1, obj2){
+		    var x1 = obj1.offsetLeft + obj1.offsetWidth / 2;
+		    var y1 = obj1.offsetTop + obj1.offsetHeight / 2;
+		    var x2 = obj2.offsetLeft + obj2.offsetWidth / 2;
+		    var y2 = obj2.offsetTop + obj2.offsetHeight / 2;
+		    var a = x1 - x2;
+		    var b = y1 - y2;
+
+		    return Math.sqrt(a * a + b * b);
+		}
+		
+		//找到距离最近的
+		function findMin(obj){
+			var minDis = 999999999;
+			var minIndex = -1;
+			for(var i=0;i<aLi.length;i++){
+				if(obj==aLi[i])continue;
+				if(colTest(obj,aLi[i])){
+					var dis = getDis(obj,aLi[i]);
+					if(dis<minDis){
+						minDis = dis;
+						minIndex = i;
+					}
+				}
+			}
+			if(minIndex==-1){
+				return null;
+			}else{
+				return aLi[minIndex];
+			}
+		}	
+	}
+</script>
+<style>
+	#ul1 {
+	    width: 1480px;
+	    margin: 20px auto;
+	    position: relative;
+	}
+	#ul1 li {
+	    width: 90px;
+	    height: 118px;
+	    margin: 10px;
+	    float: none;
+	    border: 1px solid #ccc;
+	    box-sizing: border-box;
+	}
+
+	#ul1 li img {
+	    width: 100%;
+	    display: block;
+	}
+
+	/* 中间留白 */
+	#ul1 li:nth-child(7) {
+	    margin-left: 200px;
+	}
+
+	#ul1 .active {
+	    border: 1px dashed red;
+	}
+	#up {
+	    transform: rotate(180deg); /* 旋转180度 */
+	    transition: transform 0.3s; /* 可选：加动画效果 */
+	}
+</style>
+</head>
+<body>
+<ul id="ul1">
+	<li><img src="images/001.png" ID="up"/></li>
+	<li><img src="images/002.png" ID="up"/></li>
+	<li><img src="images/003.png" ID="up"/></li>
+	<li><img src="images/004.png" ID="up"/></li>
+	<li><img src="images/005.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	
+	<li></li>
+	<li></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	<li></li>
+	<li></li>
+	<li></li>
+		
+	<li><img src="images/001.png" ID="up"/></li>
+	<li><img src="images/002.png" ID="up"/></li>
+	<li><img src="images/003.png" ID="up"/></li>
+	<li><img src="images/004.png" ID="up"/></li>
+	<li><img src="images/005.png" ID="up"/></li>
+	<li><img src="images/006.png" ID="up"/></li>
+	
+	<!--hr-->
+	
+	<li><img src="images/006.png" ID="down"/></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+		
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li></li>
+	<li></li>
+	
+	<li></li>
+	<li></li>
+	<li></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li><img src="images/006.png" /></li>
+	<li></li>
+	<li></li>
+	
+	<li></li>
+	<li></li>
+	<li></li>
+	<li><img src="images/6.png" /></li>
+	<li><img src="images/6.png" /></li>
+	<li><img src="images/6.png" /></li>
+</ul>
+</body>
+</html>
