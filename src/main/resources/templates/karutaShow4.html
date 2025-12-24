@@ -105,52 +105,70 @@ window.onload = function() {
 	}
 
 	function setDrag(obj){
-	        obj.onmouseover = function(){ obj.style.cursor = "move"; }
+	    obj.onmouseover = function(){ obj.style.cursor = "move"; }
 
-	        obj.onmousedown = function(event){
-	            event.preventDefault();
+	    // 统一处理鼠标和触摸事件
+	    const startDrag = function(startX, startY){
+	        let offsetX = startX - obj.offsetLeft;
+	        let offsetY = startY - obj.offsetTop;
+	        let isDragging = false;
+	        obj.style.zIndex = minZindex++;
 
-	            let startX = event.clientX;
-	            let startY = event.clientY;
-	            let offsetX = event.clientX - obj.offsetLeft;
-	            let offsetY = event.clientY - obj.offsetTop;
+	        const move = function(e){
+	            e.preventDefault();
+	            const point = getPoint(e); // 获取触点
+	            let dx = point.x - startX;
+	            let dy = point.y - startY;
+	            if(Math.abs(dx) > 3 || Math.abs(dy) > 3) isDragging = true;
 
-	            let isDragging = false;
-	            obj.style.zIndex = minZindex++;
-
-	            document.onmousemove = function(e){
-	                let dx = e.clientX - startX;
-	                let dy = e.clientY - startY;
-	                if(Math.abs(dx) > 3 || Math.abs(dy) > 3) isDragging = true;
-
-	                if(isDragging){
-	                    obj.style.left = e.clientX - offsetX + "px";
-	                    obj.style.top  = e.clientY - offsetY + "px";
-	                }
-	            }
-
-	            document.onmouseup = function(e){
-	                document.onmousemove = null;
-	                document.onmouseup = null;
-
-	                if(!isDragging){
-	                    if(obj.querySelector("img")) obj.classList.toggle("back");
-	                    return;
-	                }
-
-	                let oNear = findMin(obj);
-	                if(oNear){
-	                    startMove(oNear, aPos[obj.index]);
-	                    startMove(obj, aPos[oNear.index]);
-	                    let temp = oNear.index;
-	                    oNear.index = obj.index;
-	                    obj.index = temp;
-	                } else {
-	                    startMove(obj, aPos[obj.index]);
-	                }
+	            if(isDragging){
+	                obj.style.left = point.x - offsetX + "px";
+	                obj.style.top  = point.y - offsetY + "px";
 	            }
 	        }
+
+	        const end = function(e){
+	            document.removeEventListener("mousemove", move);
+	            document.removeEventListener("mouseup", end);
+	            document.removeEventListener("touchmove", move);
+	            document.removeEventListener("touchend", end);
+
+	            if(!isDragging){
+	                if(obj.querySelector("img")) obj.classList.toggle("back");
+	                return;
+	            }
+
+	            let oNear = findMin(obj);
+	            if(oNear){
+	                startMove(oNear, aPos[obj.index]);
+	                startMove(obj, aPos[oNear.index]);
+	                let temp = oNear.index;
+	                oNear.index = obj.index;
+	                obj.index = temp;
+	            } else {
+	                startMove(obj, aPos[obj.index]);
+	            }
+	        }
+
+	        document.addEventListener("mousemove", move);
+	        document.addEventListener("mouseup", end);
+	        document.addEventListener("touchmove", move, {passive:false});
+	        document.addEventListener("touchend", end);
 	    }
+
+	    // 鼠标事件
+	    obj.addEventListener("mousedown", function(e){
+	        e.preventDefault();
+	        startDrag(e.clientX, e.clientY);
+	    });
+
+	    // 触摸事件
+	    obj.addEventListener("touchstart", function(e){
+	        e.preventDefault();
+	        const point = getPoint(e);
+	        startDrag(point.x, point.y);
+	    }, {passive:false});
+	}
 
 	function colTest(obj1,obj2){
 		var t1=obj1.offsetTop,r1=obj1.offsetLeft+obj1.offsetWidth,b1=obj1.offsetTop+obj1.offsetHeight,l1=obj1.offsetLeft;
@@ -226,7 +244,6 @@ function getPoint(e) {
         };
     }
 }
-
 </script>
 <style>
 	/* li 默认显示正面 */
