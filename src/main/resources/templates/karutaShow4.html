@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>かるたの暗記</title>
+<style>
+* {margin:0; padding:0;list-style: none}
+
+#ul1 {
+    width: 100%;
+    max-width: 1400px;   /* 桌面最大宽度 */
+    margin: 20px auto;
+    position: relative;
+}
+#ul1 li:hover{ 
+	border-color: #9a9fa4; 
+	box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.85);
+}
+#ul1 .active{ 
+	border:1px dashed red;
+}
+body {
+    margin: 0;
+    padding: 0;
+    background: url("images/bgback.png") no-repeat center center fixed;
+    background-size: cover;
+}
+
+#ul1 li {
+    width: var(--card-w);
+    height: var(--card-h);
+    position: absolute;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+</style>
+<script type="text/javascript" src="move.js"></script>
+<script>
+let fudaListCount=7;
+let fudaRowCount=14;
+let isDragging = false;  // 当前是否拖拽
+let startX = 0, startY = 0; // 鼠标按下时坐标
+	
+window.onload = function() {
+	const oUl = document.getElementById("ul1");
+	const UL_WIDTH = Math.min(window.innerWidth - 40, 1600);
+
+	// 卡片宽度 = 容器宽度 ÷ 列数
+	let ITEM_W = UL_WIDTH / fudaRowCount;
+	// 在小屏时略微放大补偿
+	if (UL_WIDTH < 1000) {
+	    ITEM_W *= 1.1;
+	}
+	// 限制最小 / 最大（防止太小或太大）
+	ITEM_W = Math.max(20, Math.min(120, ITEM_W));
+	let ITEM_H = ITEM_W * 1.4;
+
+	// 写入 CSS 变量
+	oUl.style.setProperty("--card-w", ITEM_W + "px");
+	oUl.style.setProperty("--card-h", ITEM_H + "px");
+	
+	var aLi = document.querySelectorAll("#ul1 li");
+	var aLi = oUl.getElementsByTagName("li");
+	var disX = 0;
+	var disY = 0;
+	var minZindex = 1;
+	var aPos =[];
+
+	// 初始化排列
+	var GAP = 1;
+	var V_GAP = 0;
+	var STEP_X = ITEM_W + GAP * 2;
+	var STEP_Y = ITEM_H + V_GAP * 2;
+
+	karutaShow3.html
+
+	// 添加横线
+	var hr = document.createElement('div');
+	hr.style.position = 'absolute';
+	hr.style.left = '0px';
+	hr.style.width = UL_WIDTH + 'px';
+	hr.style.height = '2px';
+	hr.style.backgroundColor = '#000';
+	hr.style.top = 3 * STEP_Y - (V_GAP/2) + 25+'px';
+	//oUl.appendChild(hr);
+
+	// 设置拖拽
+	for(var i=0;i<aLi.length;i++){
+		aLi[i].style.position = "absolute";
+		aLi[i].style.margin = 0;
+		setDrag(aLi[i]);
+	}
+
+	function setDrag(obj){
+	    obj.onmouseover = function(){ obj.style.cursor = "move"; }
+
+	    obj.onmousedown = function(event){
+	        event.preventDefault();
+
+	        // 记录起始坐标
+	        let startX = event.clientX;
+	        let startY = event.clientY;
+	        let offsetX = event.clientX - obj.offsetLeft;
+	        let offsetY = event.clientY - obj.offsetTop;
+
+	        let isDragging = false; // 默认不是拖拽
+
+	        obj.style.zIndex = minZindex++;
+
+	        document.onmousemove = function(e){
+				let dx = e.clientX - startX;
+	            let dy = e.clientY - startY;
+
+	            if(Math.abs(dx) > 3 || Math.abs(dy) > 3){
+	                isDragging = true;
+	            }
+
+	            if(isDragging){
+	                obj.style.left = e.clientX - offsetX + "px";
+	                obj.style.top  = e.clientY - offsetY + "px";
+	            }
+	        }
+
+	        document.onmouseup = function(e){
+				document.onmousemove = null;
+	            document.onmouseup = null;
+
+				if(!isDragging){
+				    // ⭐ 只有有图片的卡片才翻面
+				    if(obj.querySelector("img")){
+				        obj.classList.toggle("back");
+				    }
+				    return;
+				}
+
+	            // ⭐ 下面才是拖拽逻辑
+	            let oNear = findMin(obj);
+	            if(oNear){
+	                oNear.classList.remove("active");
+	                startMove(oNear, aPos[obj.index]);
+	                startMove(obj, aPos[oNear.index]);
+
+	                let temp = oNear.index;
+	                oNear.index = obj.index;
+	                obj.index = temp;
+	            }else{
+	                startMove(obj, aPos[obj.index]);
+	            }
+	        }
+	    }
+	}
+
+	function colTest(obj1,obj2){
+		var t1=obj1.offsetTop,r1=obj1.offsetLeft+obj1.offsetWidth,b1=obj1.offsetTop+obj1.offsetHeight,l1=obj1.offsetLeft;
+		var t2=obj2.offsetTop,r2=obj2.offsetLeft+obj2.offsetWidth,b2=obj2.offsetTop+obj2.offsetHeight,l2=obj2.offsetLeft;
+		return !(t1>b2 || r1<l2 || b1<t2 || l1>r2);
+	}
+
+	function getDis(obj1,obj2){
+	    var x1=obj1.offsetLeft+obj1.offsetWidth/2;
+	    var y1=obj1.offsetTop+obj1.offsetHeight/2;
+	    var x2=obj2.offsetLeft+obj2.offsetWidth/2;
+	    var y2=obj2.offsetTop+obj2.offsetHeight/2;
+	    return Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2));
+	}
+
+	function findMin(obj){
+		var minDis=999999,minIndex=-1;
+		for(var i=0;i<aLi.length;i++){
+			if(obj==aLi[i]) continue;
+			if(colTest(obj,aLi[i])){
+				var dis=getDis(obj,aLi[i]);
+				if(dis<minDis){
+					minDis=dis;
+					minIndex=i;
+				}
+			}
+		}
+		return minIndex==-1 ? null : aLi[minIndex];
+	}
+
+	function startMove(obj,pos){
+	    clearInterval(obj.timer);
+	    obj.timer=setInterval(function(){
+	        var curL=obj.offsetLeft,curT=obj.offsetTop;
+	        var speedL=(pos.left-curL)/5;
+	        var speedT=(pos.top-curT)/5;
+	        speedL = speedL>0?Math.ceil(speedL):Math.floor(speedL);
+	        speedT = speedT>0?Math.ceil(speedT):Math.floor(speedT);
+	        if(curL==pos.left && curT==pos.top){
+	            clearInterval(obj.timer);
+	        } else {
+	            obj.style.left = curL + speedL + "px";
+	            obj.style.top = curT + speedT + "px";
+	        }
+	    },30);
+	}
+	// 一键翻面按钮
+    var flipped = false; // 状态变量，false表示正面显示
+    document.getElementById("flipAll").onclick = function() {
+        var aLi = document.querySelectorAll("#ul1 li");
+        aLi.forEach(function(li){
+            if(li.querySelector('img')) { // 有图片才翻
+                if(!flipped) {
+                    li.classList.add("back"); // 翻到背面
+                } else {
+                    li.classList.remove("back"); // 翻回正面
+                }
+            }
+        });
+        flipped = !flipped; // 切换状态
+    }
+}
+window.onresize = function () {
+    location.reload();
+};
+</script>
+<style>
+	/* li 默认显示正面 */
+
+	/* 背面显示 */
+	#ul1 li.back {
+	    background: url('images/back.png') no-repeat center center;
+	    background-size: cover;
+	}
+	#ul1 li.back img {
+	    visibility: hidden; /* 背面隐藏正面图片 */
+	}
+	#ul1 li img {
+	    width: 100%;
+	    height: 100%;
+	    display: block;
+	}
+	/* ………………………… */
+	#ul1 .active {
+	    border: 1px dashed red;
+	}
+	#up {
+	    transform: rotate(180deg); /* 旋转180度 */
+	    transition: transform 0.3s; /* 可选：加动画效果 */
+	}
+	/* 背面初始显示 */
+	#ul1 li.back img {
+	    visibility: hidden;
+	}
+	#ul1 li.back {
+	    background: url('images/back.png') no-repeat center center;
+	    background-size: cover;
+	}
+</style>
+</head>
+<body>
+<!-- 一键翻面按钮 -->
+<button id="flipAll" style="position: fixed; top: 20px; left: 20px; z-index: 999;">すべて裏返す</button>
+<ul id="ul1">
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i < list1_1.size()}" th:src="@{/images/{name}.png(name=${list1_1[i]})}" ID="up"/>
+	</li>
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i >= 7 - list1_2.size()}" th:src="@{/images/{name}.png(name=${list1_2[i - (7 - list1_2.size())]})}" id="up"/>
+	</li>
+	
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i < list2_1.size()}" th:src="@{/images/{name}.png(name=${list2_1[i]})}" ID="up"/>
+	</li>
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i >= 7 - list2_2.size()}" th:src="@{/images/{name}.png(name=${list2_2[i - (7 - list2_2.size())]})}" id="up"/>
+	</li>
+	
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i < list3_1.size()}" th:src="@{/images/{name}.png(name=${list3_1[i]})}" ID="up"/>
+	</li>
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i >= 7 - list3_2.size()}" th:src="@{/images/{name}.png(name=${list3_2[i - (7 - list3_2.size())]})}" id="up"/>
+	</li>
+	
+	<!--hr-->
+	
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i < list4_1.size()}" th:src="@{/images/{name}.png(name=${list4_1[i]})}" ID="down"/>
+	</li>
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i >= 7 - list4_2.size()}" th:src="@{/images/{name}.png(name=${list4_2[i - (7 - list4_2.size())]})}" id="down"/>
+	</li>
+	
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i < list5_1.size()}" th:src="@{/images/{name}.png(name=${list5_1[i]})}" ID="down"/>
+	</li>
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i >= 7 - list5_2.size()}" th:src="@{/images/{name}.png(name=${list5_2[i - (7 - list5_2.size())]})}" id="down"/>
+	</li>
+	
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i < list6_1.size()}" th:src="@{/images/{name}.png(name=${list6_1[i]})}" ID="down"/>
+	</li>
+	<li th:each="i : ${#numbers.sequence(0,6)}">
+	    <img th:if="${i >= 7 - list6_2.size()}" th:src="@{/images/{name}.png(name=${list6_2[i - (7 - list6_2.size())]})}" id="down"/>
+	</li>
+</ul>
+</body>
+</html>
