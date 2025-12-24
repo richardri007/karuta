@@ -96,51 +96,59 @@ window.onload = function() {
 		setDrag(aLi[i]);
 	}
 
-	function setDrag(obj){
-	    obj.onmouseover = function(){ obj.style.cursor = "move"; }
+	function setDrag(obj) {
 
-	    obj.onmousedown = function(event){
+	    obj.onmousedown = startDrag;
+	    obj.ontouchstart = startDrag;   // ⭐ 手机
+
+	    function startDrag(event) {
 	        event.preventDefault();
 
-	        // 记录起始坐标
-	        let startX = event.clientX;
-	        let startY = event.clientY;
-	        let offsetX = event.clientX - obj.offsetLeft;
-	        let offsetY = event.clientY - obj.offsetTop;
-
-	        let isDragging = false; // 默认不是拖拽
+	        let p = getPoint(event);
+	        let startX = p.x;
+	        let startY = p.y;
+	        let offsetX = startX - obj.offsetLeft;
+	        let offsetY = startY - obj.offsetTop;
+	        let isDragging = false;
 
 	        obj.style.zIndex = minZindex++;
 
-	        document.onmousemove = function(e){
-				let dx = e.clientX - startX;
-	            let dy = e.clientY - startY;
+	        document.onmousemove = moveDrag;
+	        document.ontouchmove = moveDrag;   // ⭐ 手机
 
-	            if(Math.abs(dx) > 3 || Math.abs(dy) > 3){
+	        document.onmouseup = endDrag;
+	        document.ontouchend = endDrag;     // ⭐ 手机
+
+	        function moveDrag(e) {
+	            let p = getPoint(e);
+	            let dx = p.x - startX;
+	            let dy = p.y - startY;
+
+	            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
 	                isDragging = true;
 	            }
 
-	            if(isDragging){
-	                obj.style.left = e.clientX - offsetX + "px";
-	                obj.style.top  = e.clientY - offsetY + "px";
+	            if (isDragging) {
+	                obj.style.left = p.x - offsetX + "px";
+	                obj.style.top  = p.y - offsetY + "px";
 	            }
 	        }
 
-	        document.onmouseup = function(e){
-				document.onmousemove = null;
+	        function endDrag(e) {
+	            document.onmousemove = null;
+	            document.ontouchmove = null;
 	            document.onmouseup = null;
+	            document.ontouchend = null;
 
-				if(!isDragging){
-				    // ⭐ 只有有图片的卡片才翻面
-				    if(obj.querySelector("img")){
-				        obj.classList.toggle("back");
-				    }
-				    return;
-				}
+	            if (!isDragging) {
+	                if (obj.querySelector("img")) {
+	                    obj.classList.toggle("back");
+	                }
+	                return;
+	            }
 
-	            // ⭐ 下面才是拖拽逻辑
 	            let oNear = findMin(obj);
-	            if(oNear){
+	            if (oNear) {
 	                oNear.classList.remove("active");
 	                startMove(oNear, aPos[obj.index]);
 	                startMove(obj, aPos[oNear.index]);
@@ -148,7 +156,7 @@ window.onload = function() {
 	                let temp = oNear.index;
 	                oNear.index = obj.index;
 	                obj.index = temp;
-	            }else{
+	            } else {
 	                startMove(obj, aPos[obj.index]);
 	            }
 	        }
@@ -216,6 +224,20 @@ window.onload = function() {
         flipped = !flipped; // 切换状态
     }
 }
+function getPoint(e) {
+    if (e.touches && e.touches.length > 0) {
+        return {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        };
+    } else {
+        return {
+            x: e.clientX,
+            y: e.clientY
+        };
+    }
+}
+
 </script>
 <style>
 	/* li 默认显示正面 */
@@ -227,6 +249,7 @@ window.onload = function() {
 	    border: 1px solid #ccc;
 	    box-sizing: border-box;
 	    background: none; /* 默认无背景 */
+		touch-action: none;
 	}
 	/* 背面显示 */
 	#ul1 li.back {
