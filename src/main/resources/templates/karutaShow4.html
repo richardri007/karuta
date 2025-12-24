@@ -7,10 +7,9 @@
 * {margin:0; padding:0;list-style: none}
 
 #ul1 {
-    width: 100%;
-    max-width: 1400px;   /* 桌面最大宽度 */
-    margin: 20px auto;
-    position: relative;
+	width:660px; 
+	position:relative; 
+	margin:10px auto;
 }
 #ul1 li:hover{ 
 	border-color: #9a9fa4; 
@@ -25,41 +24,17 @@ body {
     background: url("images/bgback.png") no-repeat center center fixed;
     background-size: cover;
 }
-
-#ul1 li {
-    width: var(--card-w);
-    height: var(--card-h);
-    position: absolute;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-}
 </style>
 <script type="text/javascript" src="move.js"></script>
 <script>
-let fudaListCount=7;
-let fudaRowCount=14;
-let isDragging = false;  // 当前是否拖拽
-let startX = 0, startY = 0; // 鼠标按下时坐标
-	
+	let fudaListCount=7;
+	let fudaRowCount=14;
+	let isDragging = false;  // 当前是否拖拽
+	let startX = 0, startY = 0; // 鼠标按下时坐标
 window.onload = function() {
-	const oUl = document.getElementById("ul1");
-	const UL_WIDTH = Math.min(window.innerWidth - 40, 1600);
 
-	// 卡片宽度 = 容器宽度 ÷ 列数
-	let ITEM_W = UL_WIDTH / fudaRowCount;
-	// 在小屏时略微放大补偿
-	if (UL_WIDTH < 1000) {
-	    ITEM_W *= 1.1;
-	}
-	// 限制最小 / 最大（防止太小或太大）
-	ITEM_W = Math.max(20, Math.min(120, ITEM_W));
-	let ITEM_H = ITEM_W * 1.4;
-
-	// 写入 CSS 变量
-	oUl.style.setProperty("--card-w", ITEM_W + "px");
-	oUl.style.setProperty("--card-h", ITEM_H + "px");
-	
 	var aLi = document.querySelectorAll("#ul1 li");
+	var oUl= document.getElementById("ul1");
 	var aLi = oUl.getElementsByTagName("li");
 	var disX = 0;
 	var disY = 0;
@@ -67,12 +42,50 @@ window.onload = function() {
 	var aPos =[];
 
 	// 初始化排列
+	var ITEM_W = 90;
+	var ITEM_H = 130;
 	var GAP = 1;
 	var V_GAP = 0;
 	var STEP_X = ITEM_W + GAP * 2;
 	var STEP_Y = ITEM_H + V_GAP * 2;
+	var UL_WIDTH = oUl.offsetWidth;
 
-	karutaShow3.html
+	for (var i = 0; i < aLi.length; ) {
+	    var row = Math.floor(i / fudaRowCount);
+	    var remain = aLi.length - i;
+	    var count = Math.min(fudaRowCount, remain);
+
+	    var totalCount = count;
+	    var leftCount  = Math.min(fudaListCount, totalCount);
+	    var rightCount = totalCount - leftCount;
+	    var EXTRA_GAP = 60;
+
+	    // 左侧
+	    for (var j = 0; j < leftCount; j++) {
+	        var index = i + j;
+	        var left = j * STEP_X;
+	        var top  = row * STEP_Y + (row >= 3 ? EXTRA_GAP : 0);
+
+	        aLi[index].style.left = left + "px";
+	        aLi[index].style.top  = top + "px";
+	        aPos[index] = { left, top };
+	        aLi[index].index = index;
+	    }
+
+	    // 右侧（紧接左侧，无中间空位）
+	    for (var j = 0; j < rightCount; j++) {
+	        var index = i + leftCount + j;
+	        var left = (leftCount + j) * STEP_X;
+	        var top  = row * STEP_Y + (row >= 3 ? EXTRA_GAP : 0);
+
+	        aLi[index].style.left = left + "px";
+	        aLi[index].style.top  = top + "px";
+	        aPos[index] = { left, top };
+	        aLi[index].index = index;
+	    }
+
+	    i += count;
+	}
 
 	// 添加横线
 	var hr = document.createElement('div');
@@ -92,63 +105,52 @@ window.onload = function() {
 	}
 
 	function setDrag(obj){
-	    obj.onmouseover = function(){ obj.style.cursor = "move"; }
+	        obj.onmouseover = function(){ obj.style.cursor = "move"; }
 
-	    obj.onmousedown = function(event){
-	        event.preventDefault();
+	        obj.onmousedown = function(event){
+	            event.preventDefault();
 
-	        // 记录起始坐标
-	        let startX = event.clientX;
-	        let startY = event.clientY;
-	        let offsetX = event.clientX - obj.offsetLeft;
-	        let offsetY = event.clientY - obj.offsetTop;
+	            let startX = event.clientX;
+	            let startY = event.clientY;
+	            let offsetX = event.clientX - obj.offsetLeft;
+	            let offsetY = event.clientY - obj.offsetTop;
 
-	        let isDragging = false; // 默认不是拖拽
+	            let isDragging = false;
+	            obj.style.zIndex = minZindex++;
 
-	        obj.style.zIndex = minZindex++;
+	            document.onmousemove = function(e){
+	                let dx = e.clientX - startX;
+	                let dy = e.clientY - startY;
+	                if(Math.abs(dx) > 3 || Math.abs(dy) > 3) isDragging = true;
 
-	        document.onmousemove = function(e){
-				let dx = e.clientX - startX;
-	            let dy = e.clientY - startY;
-
-	            if(Math.abs(dx) > 3 || Math.abs(dy) > 3){
-	                isDragging = true;
+	                if(isDragging){
+	                    obj.style.left = e.clientX - offsetX + "px";
+	                    obj.style.top  = e.clientY - offsetY + "px";
+	                }
 	            }
 
-	            if(isDragging){
-	                obj.style.left = e.clientX - offsetX + "px";
-	                obj.style.top  = e.clientY - offsetY + "px";
-	            }
-	        }
+	            document.onmouseup = function(e){
+	                document.onmousemove = null;
+	                document.onmouseup = null;
 
-	        document.onmouseup = function(e){
-				document.onmousemove = null;
-	            document.onmouseup = null;
+	                if(!isDragging){
+	                    if(obj.querySelector("img")) obj.classList.toggle("back");
+	                    return;
+	                }
 
-				if(!isDragging){
-				    // ⭐ 只有有图片的卡片才翻面
-				    if(obj.querySelector("img")){
-				        obj.classList.toggle("back");
-				    }
-				    return;
-				}
-
-	            // ⭐ 下面才是拖拽逻辑
-	            let oNear = findMin(obj);
-	            if(oNear){
-	                oNear.classList.remove("active");
-	                startMove(oNear, aPos[obj.index]);
-	                startMove(obj, aPos[oNear.index]);
-
-	                let temp = oNear.index;
-	                oNear.index = obj.index;
-	                obj.index = temp;
-	            }else{
-	                startMove(obj, aPos[obj.index]);
+	                let oNear = findMin(obj);
+	                if(oNear){
+	                    startMove(oNear, aPos[obj.index]);
+	                    startMove(obj, aPos[oNear.index]);
+	                    let temp = oNear.index;
+	                    oNear.index = obj.index;
+	                    obj.index = temp;
+	                } else {
+	                    startMove(obj, aPos[obj.index]);
+	                }
 	            }
 	        }
 	    }
-	}
 
 	function colTest(obj1,obj2){
 		var t1=obj1.offsetTop,r1=obj1.offsetLeft+obj1.offsetWidth,b1=obj1.offsetTop+obj1.offsetHeight,l1=obj1.offsetLeft;
@@ -211,13 +213,33 @@ window.onload = function() {
         flipped = !flipped; // 切换状态
     }
 }
-window.onresize = function () {
-    location.reload();
-};
+function getPoint(e) {
+    if (e.touches && e.touches.length > 0) {
+        return {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        };
+    } else {
+        return {
+            x: e.clientX,
+            y: e.clientY
+        };
+    }
+}
+
 </script>
 <style>
 	/* li 默认显示正面 */
-
+	#ul1 li {
+	    width: 90px;
+	    height: 118px;
+	    position: absolute;
+	    margin: 0;
+	    border: 1px solid #ccc;
+	    box-sizing: border-box;
+	    background: none; /* 默认无背景 */
+		touch-action: none;
+	}
 	/* 背面显示 */
 	#ul1 li.back {
 	    background: url('images/back.png') no-repeat center center;
@@ -232,6 +254,12 @@ window.onresize = function () {
 	    display: block;
 	}
 	/* ………………………… */
+	#ul1 {
+	    width: 1380px;	/* 页面整体显示长度 */
+	    margin: 20px auto;
+	    position: relative;
+	}
+
 	#ul1 .active {
 	    border: 1px dashed red;
 	}
