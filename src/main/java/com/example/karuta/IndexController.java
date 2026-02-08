@@ -3,7 +3,9 @@ package com.example.karuta;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
+/*
+ * brtest
+ */
 @Controller
 public class IndexController {
 
