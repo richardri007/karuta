@@ -4,7 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 /*
- * BR1 + BR2
+ * BR1
  */
 @Controller
 public class IndexController {
